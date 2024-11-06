@@ -1,0 +1,54 @@
+{
+  "project_info": {
+    "project_number": "576851441251",
+    "project_id": "tokokita-app-4a3d2",
+    "storage_bucket": "tokokita-app-4a3d2.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:576851441251:android:478b8c1d8169ae99206a56",
+        "android_client_info": {
+          "package_name": "com.example.tokokita_app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "576851441251-9nnaus6npgu3lmng0aehjv3q34kjt3i0.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.tokokita_app",
+            "certificate_hash": "3aa93f65d4f00fe731458529b169df559f78baad"
+          }
+        },
+        {
+          "client_id": "576851441251-qpku3uqqi3no2v9o9h442bjp2pniubbk.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAmYZ60pA-xZh0AgMovhFYp-PPsFJRKx48"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "576851441251-qpku3uqqi3no2v9o9h442bjp2pniubbk.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "576851441251-v1bji24me0j3693n0ou1jciu52f0epfa.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.tokokitaApp"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
