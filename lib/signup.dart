@@ -86,12 +86,17 @@ class SignupPage extends StatelessWidget {
                     }
                   },
                   style: ElevatedButton.styleFrom(
-                    padding: EdgeInsets.symmetric(vertical: 15),
+                    padding: EdgeInsets.symmetric(vertical: 8, horizontal: 12),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: BorderRadius.circular(5),
                     ),
+                    backgroundColor: Colors.blueAccent,
+                    foregroundColor: Colors.white,
                   ),
-                  child: Text('Sign Up'),
+                  child: Text(
+                    'Sign Up',
+                    style: TextStyle(fontSize: 16),
+                  ),
                 ),
                 SizedBox(height: 10),
                 TextButton(

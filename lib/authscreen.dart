@@ -84,21 +84,51 @@ class AuthScreen extends StatelessWidget {
                   children: [
                     SizedBox(height: 20),
                     Text(
-                      'Welcome Back',
+                      'Toko Kita',
                       style: TextStyle(
                         fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    Text(
+                      'Aplikasi Pencatatan Stok Barang',
+                      style: TextStyle(
+                        fontSize: 14,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
                     SizedBox(height: 20),
                     TextField(
                       controller: _emailController,
-                      decoration: InputDecoration(labelText: 'Email'),
+                      decoration: InputDecoration(
+                        labelText: 'Email',
+                        labelStyle: TextStyle(
+                            color: Colors.black), // Change label color
+                        enabledBorder: OutlineInputBorder(
+                          borderSide: BorderSide(
+                              color: Colors
+                                  .blueAccent), // Border color when enabled
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderSide: BorderSide(
+                              color: Colors.blue), // Border color when focused
+                        ),
+                      ),
                       keyboardType: TextInputType.emailAddress,
                     ),
+                    SizedBox(height: 10),
                     TextField(
                       controller: _passwordController,
-                      decoration: InputDecoration(labelText: 'Password'),
+                      decoration: InputDecoration(
+                        labelText: 'Password',
+                        labelStyle: TextStyle(color: Colors.black),
+                        enabledBorder: OutlineInputBorder(
+                          borderSide: BorderSide(color: Colors.blueAccent),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderSide: BorderSide(color: Colors.blue),
+                        ),
+                      ),
                       obscureText: true,
                     ),
                     SizedBox(height: 20),
@@ -119,12 +149,18 @@ class AuthScreen extends StatelessWidget {
                         }
                       },
                       style: ElevatedButton.styleFrom(
-                        padding: EdgeInsets.symmetric(vertical: 15),
+                        padding:
+                            EdgeInsets.symmetric(vertical: 8, horizontal: 12),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
+                          borderRadius: BorderRadius.circular(5),
                         ),
+                        backgroundColor: Colors.blueAccent,
+                        foregroundColor: Colors.white,
                       ),
-                      child: Text('Login with Email'),
+                      child: Text(
+                        'Login',
+                        style: TextStyle(fontSize: 16),
+                      ),
                     ),
                     SizedBox(height: 10),
                     ElevatedButton(
@@ -143,14 +179,28 @@ class AuthScreen extends StatelessWidget {
                         }
                       },
                       style: ElevatedButton.styleFrom(
-                        padding: EdgeInsets.symmetric(vertical: 15),
+                        padding:
+                            EdgeInsets.symmetric(vertical: 10, horizontal: 15),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
+                          borderRadius: BorderRadius.circular(30),
                         ),
+                        backgroundColor: Colors.black,
+                        foregroundColor: Colors.white,
                       ),
-                      child: Text('Sign in with Google'),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Image.asset(
+                            'assets/google_logo.png',
+                            height: 22,
+                            width: 22,
+                          ),
+                          SizedBox(width: 10),
+                          Text('Sign in with Google'),
+                        ],
+                      ),
                     ),
-                    SizedBox(height: 10),
                     TextButton(
                       onPressed: () {
                         Navigator.push(
@@ -158,7 +208,7 @@ class AuthScreen extends StatelessWidget {
                           MaterialPageRoute(builder: (context) => SignupPage()),
                         );
                       },
-                      child: Text('Don\'t have an account? Sign Up'),
+                      child: Text('First time on Toko Kita? Sign Up'),
                     ),
                   ],
                 ),
