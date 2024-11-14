@@ -6,13 +6,12 @@ class HomeScreen extends StatelessWidget {
 
   void _signOut(BuildContext context) async {
     await _auth.signOut();
-    // Navigate back to auth screen
     Navigator.pushReplacementNamed(context, '/');
   }
 
   @override
   Widget build(BuildContext context) {
-    User? user = _auth.currentUser; // Get the current user
+    User? user = _auth.currentUser;
 
     return Scaffold(
       appBar: AppBar(
@@ -25,12 +24,12 @@ class HomeScreen extends StatelessWidget {
         ],
       ),
       body: Center(
-        child: user != null // Check if user is signed in
+        child: user != null
             ? Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
-                    'Welcome, ${user.displayName ?? user.email}!', // Display user name or email
+                    'Welcome, ${user.displayName ?? user.email}!', // Display name or email
                     style: TextStyle(fontSize: 24),
                   ),
                   SizedBox(height: 20),
