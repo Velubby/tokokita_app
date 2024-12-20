@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import 'signup.dart'; // Import the signup page
+import 'signup_screen.dart'; // Import the signup page
 
 class AuthScreen extends StatelessWidget {
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -57,7 +57,7 @@ class AuthScreen extends StatelessWidget {
             decoration: BoxDecoration(
               image: DecorationImage(
                 image: AssetImage(
-                    'assets/background.jpg'), // Add your background image here
+                    'assets/images/background.jpg'), // Add your background image here
                 fit: BoxFit.cover,
               ),
             ),
@@ -154,7 +154,7 @@ class AuthScreen extends StatelessWidget {
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(5),
                         ),
-                        backgroundColor: Colors.blueAccent,
+                        backgroundColor: Colors.blue,
                         foregroundColor: Colors.white,
                       ),
                       child: Text(
@@ -192,7 +192,7 @@ class AuthScreen extends StatelessWidget {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Image.asset(
-                            'assets/google_logo.png',
+                            'assets/logos/google_logo.png',
                             height: 22,
                             width: 22,
                           ),

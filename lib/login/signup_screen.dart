@@ -35,7 +35,7 @@ class SignupPage extends StatelessWidget {
           // Background image
           Positioned.fill(
             child: Image.asset(
-              'assets/background.jpg',
+              'assets/images/background.jpg',
               fit: BoxFit.cover,
             ),
           ),

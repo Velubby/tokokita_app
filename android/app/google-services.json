@@ -22,6 +22,14 @@
           }
         },
         {
+          "client_id": "576851441251-l7m5hp8u98sg39c1ipqq45c3ht8pitiq.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.tokokita_app",
+            "certificate_hash": "b04f076de92128dd658422c3bc81dd76b8c493c5"
+          }
+        },
+        {
           "client_id": "576851441251-qpku3uqqi3no2v9o9h442bjp2pniubbk.apps.googleusercontent.com",
           "client_type": 3
         }
