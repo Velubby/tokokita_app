@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:fluttertoast/fluttertoast.dart';
+import 'package:tokokita_app/screens/home/home_common/toast.dart';
 
 class RowRenderContainer extends StatelessWidget {
   final String assetsSvg;
@@ -20,18 +20,8 @@ class RowRenderContainer extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () {
-        // Show toast message
-        Fluttertoast.showToast(
-          msg: msg,
-          toastLength: Toast.LENGTH_SHORT,
-          gravity: ToastGravity.BOTTOM,
-          timeInSecForIosWeb: 1,
-        );
-
-        // Adding a delay to ensure toast doesn't appear for too long
-        Future.delayed(Duration(seconds: 1), () {
-          Fluttertoast.cancel(); // Cancel the toast after the delay
-        });
+        // Show custom toast
+        showCustomToast(context, msg);
 
         // Call the onTap function if provided
         if (onTap != null) {

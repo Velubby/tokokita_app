@@ -1,6 +1,6 @@
 import 'package:tokokita_app/screens/home/home_alarm.dart';
 import 'package:tokokita_app/screens/home/home_calendar.dart';
-import 'package:tokokita_app/screens/home/home_in_and_out.dart';
+import 'package:tokokita_app/screens/home/home_add_in_out.dart';
 import 'package:tokokita_app/screens/home/home_invite.dart';
 import 'package:tokokita_app/screens/home/home_notification.dart';
 import 'package:tokokita_app/screens/home/home_past.dart';
@@ -37,13 +37,7 @@ class _HomeState extends State<Home> {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                    builder: (context) => HomeNotification(
-                          title: 'Welcome to Toko Kita App',
-                          subtitle: 'Enjoy using our App',
-                          icon: Icons.notification_important,
-                          iconColor: Colors.blue,
-                          msg: 'You tapped on the update notification!',
-                        )),
+                    builder: (context) => const HomeNotification()),
               );
             },
             icon: const Icon(
@@ -115,7 +109,7 @@ class _HomeState extends State<Home> {
               const SizedBox(height: 20),
               renderContainer(const HomeSearchProduct(), Colors.white),
               const SizedBox(height: 20),
-              renderContainer(const HomeInAndOut(), Colors.white),
+              renderContainer(const HomeAddInOut(), Colors.white),
               const SizedBox(height: 20),
               renderContainer(const HomeAlarm(), Colors.white),
               const SizedBox(height: 20),

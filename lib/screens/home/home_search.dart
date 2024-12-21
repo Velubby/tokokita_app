@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:fluttertoast/fluttertoast.dart';
 
 class HomeSearchProduct extends StatelessWidget {
   const HomeSearchProduct({super.key});
@@ -11,9 +10,7 @@ class HomeSearchProduct extends StatelessWidget {
       children: [
         Expanded(
           child: GestureDetector(
-            onTap: () {
-              Fluttertoast.showToast(msg: 'Klik pencarian produk');
-            },
+            onTap: () {},
             child: Container(
               color: Colors.transparent,
               child: const Row(
@@ -35,9 +32,7 @@ class HomeSearchProduct extends StatelessWidget {
           margin: const EdgeInsets.symmetric(horizontal: 10.0),
         ),
         IconButton(
-          onPressed: () {
-            Fluttertoast.showToast(msg: 'membuka kamera');
-          },
+          onPressed: () {},
           icon: SvgPicture.asset('assets/icons/camera.svg'),
         ),
       ],

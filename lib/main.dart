@@ -20,6 +20,8 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Toko Kita',
       theme: ThemeData(
+        fontFamily: 'CookieRun',
+        useMaterial3: false,
         primarySwatch: Colors.blue,
       ),
       initialRoute: '/',

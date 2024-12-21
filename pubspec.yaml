@@ -47,6 +47,9 @@ dependencies:
   google_fonts: ^6.2.1
   flutter_svg: ^2.0.16
   fluttertoast: ^8.2.10
+  intl: ^0.17.0
+  image_picker: ^1.1.2
+  provider: ^6.0.1
 
 dev_dependencies:
   flutter_test:

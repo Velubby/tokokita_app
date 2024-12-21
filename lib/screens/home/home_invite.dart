@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:tokokita_app/screens/home/home_common/row_render_container.dart';
-import 'package:tokokita_app/screens/invite/invite_page.dart';
+import 'package:tokokita_app/screens/home/invite/invite_page.dart';
 
 class HomeInvite extends StatelessWidget {
   const HomeInvite({super.key});
