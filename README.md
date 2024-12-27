@@ -1,6 +1,6 @@
-# tokokita_app
+# Toko Kita
 
-A new Flutter project.
+A new Flutter project for Inventory Management.
 
 ## Getting Started
 
