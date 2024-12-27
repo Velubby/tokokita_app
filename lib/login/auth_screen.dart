@@ -1,50 +1,63 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:google_sign_in/google_sign_in.dart';
-import 'signup_screen.dart'; // Import the signup page
+import '/services/auth_service.dart';
+import 'signup_screen.dart';
+import '/../screens/landing/team_page.dart';
 
 class AuthScreen extends StatelessWidget {
-  final FirebaseAuth _auth = FirebaseAuth.instance;
-  final GoogleSignIn _googleSignIn = GoogleSignIn(
-    clientId:
-        '576851441251-qpku3uqqi3no2v9o9h442bjp2pniubbk.apps.googleusercontent.com', // Replace with your actual Client ID
-  );
+  final AuthService _authService = AuthService();
 
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
-  Future<UserCredential?> _signInWithGoogle() async {
+  // Sign in with Google
+  Future<void> _signInWithGoogle(BuildContext context) async {
     try {
-      final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
-      if (googleUser == null) {
-        return null; // The user canceled the sign-in
+      UserCredential? userCredential = await _authService.signInWithGoogle();
+      if (userCredential != null) {
+        final userId = userCredential.user?.uid;
+        if (userId != null) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => TeamPage(userId: userId)),
+          );
+        } else {
+          _showError(context, 'Failed to retrieve user ID after signing in.');
+        }
       }
-
-      final GoogleSignInAuthentication googleAuth =
-          await googleUser.authentication;
-
-      final credential = GoogleAuthProvider.credential(
-        accessToken: googleAuth.accessToken,
-        idToken: googleAuth.idToken,
-      );
-
-      return await _auth.signInWithCredential(credential);
-    } catch (error) {
-      print("Error signing in with Google: $error");
-      return null;
+    } catch (e) {
+      _showError(context, 'Failed to sign in with Google. Please try again.');
     }
   }
 
-  Future<UserCredential?> _signInWithEmailAndPassword() async {
+  // Sign in with email and password
+  Future<void> _signInWithEmailAndPassword(BuildContext context) async {
     try {
-      return await _auth.signInWithEmailAndPassword(
-        email: _emailController.text.trim(),
-        password: _passwordController.text.trim(),
+      UserCredential? userCredential =
+          await _authService.signInWithEmailAndPassword(
+        _emailController.text.trim(),
+        _passwordController.text.trim(),
       );
-    } catch (error) {
-      print("Error signing in with email and password: $error");
-      return null;
+      if (userCredential != null) {
+        final userId = userCredential.user?.uid;
+        if (userId != null) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => TeamPage(userId: userId)),
+          );
+        } else {
+          _showError(context, 'Failed to retrieve user ID after signing in.');
+        }
+      }
+    } catch (e) {
+      _showError(context, 'Failed to sign in. Please check your credentials.');
     }
+  }
+
+  void _showError(BuildContext context, String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
+    );
   }
 
   @override
@@ -56,8 +69,7 @@ class AuthScreen extends StatelessWidget {
           Container(
             decoration: BoxDecoration(
               image: DecorationImage(
-                image: AssetImage(
-                    'assets/images/background.jpg'), // Add your background image here
+                image: AssetImage('assets/images/background.jpg'),
                 fit: BoxFit.cover,
               ),
             ),
@@ -102,16 +114,12 @@ class AuthScreen extends StatelessWidget {
                       controller: _emailController,
                       decoration: InputDecoration(
                         labelText: 'Email',
-                        labelStyle: TextStyle(
-                            color: Colors.black), // Change label color
+                        labelStyle: TextStyle(color: Colors.black),
                         enabledBorder: OutlineInputBorder(
-                          borderSide: BorderSide(
-                              color: Colors
-                                  .blueAccent), // Border color when enabled
+                          borderSide: BorderSide(color: Colors.blueAccent),
                         ),
                         focusedBorder: OutlineInputBorder(
-                          borderSide: BorderSide(
-                              color: Colors.blue), // Border color when focused
+                          borderSide: BorderSide(color: Colors.blue),
                         ),
                       ),
                       keyboardType: TextInputType.emailAddress,
@@ -133,21 +141,7 @@ class AuthScreen extends StatelessWidget {
                     ),
                     SizedBox(height: 20),
                     ElevatedButton(
-                      onPressed: () async {
-                        UserCredential? userCredential =
-                            await _signInWithEmailAndPassword();
-                        if (userCredential != null) {
-                          // Navigate to the home screen if login is successful
-                          Navigator.pushReplacementNamed(context, '/home');
-                        } else {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content:
-                                  Text('Failed to sign in. Please try again.'),
-                            ),
-                          );
-                        }
-                      },
+                      onPressed: () => _signInWithEmailAndPassword(context),
                       style: ElevatedButton.styleFrom(
                         padding:
                             EdgeInsets.symmetric(vertical: 8, horizontal: 12),
@@ -164,20 +158,7 @@ class AuthScreen extends StatelessWidget {
                     ),
                     SizedBox(height: 10),
                     ElevatedButton(
-                      onPressed: () async {
-                        UserCredential? userCredential =
-                            await _signInWithGoogle();
-                        if (userCredential != null) {
-                          Navigator.pushReplacementNamed(context, '/home');
-                        } else {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                  'Failed to sign in with Google. Please try again.'),
-                            ),
-                          );
-                        }
-                      },
+                      onPressed: () => _signInWithGoogle(context),
                       style: ElevatedButton.styleFrom(
                         padding:
                             EdgeInsets.symmetric(vertical: 10, horizontal: 15),

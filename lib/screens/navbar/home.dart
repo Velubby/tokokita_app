@@ -85,7 +85,6 @@ class _HomeState extends State<Home> {
                         return AnimatedBuilder(
                           animation: _pageController,
                           builder: (context, child) {
-                            // _pageController.page 값이 null인 경우 안전하게 처리 -> 첫페이지로 이동
                             bool isSelected = _pageController.hasClients &&
                                 (_pageController.page?.round() ?? 0) == index;
 

@@ -5,7 +5,7 @@ import 'package:tokokita_app/screens/navbar/setting.dart';
 import 'package:flutter/material.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+  const HomeScreen({super.key, required String userId, required String teamId});
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();

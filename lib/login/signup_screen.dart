@@ -1,8 +1,13 @@
-import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
+import '/services/auth_service.dart'; // Import AuthService
+import '/services/firestore_service.dart'; // Import FirestoreService
+import '/models/user_model.dart' as app_model; // Import UserModel
 
 class SignupPage extends StatelessWidget {
-  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final AuthService _authService = AuthService(); // Use AuthService
+  final FirestoreService _firestoreService =
+      FirestoreService(); // Use FirestoreService
 
   final TextEditingController _fullNameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
@@ -10,20 +15,37 @@ class SignupPage extends StatelessWidget {
   final TextEditingController _confirmPasswordController =
       TextEditingController();
 
-  Future<UserCredential?> _signUpWithEmailAndPassword() async {
-    try {
-      UserCredential userCredential =
-          await _auth.createUserWithEmailAndPassword(
-        email: _emailController.text.trim(),
-        password: _passwordController.text.trim(),
+  Future<void> _signUpWithEmailAndPassword(BuildContext context) async {
+    if (_passwordController.text.trim() !=
+        _confirmPasswordController.text.trim()) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Passwords do not match.')),
+      );
+      return;
+    }
+
+    UserCredential? userCredential =
+        await _authService.signUpWithEmailAndPassword(
+      _emailController.text.trim(),
+      _passwordController.text.trim(),
+    );
+
+    if (userCredential != null) {
+      // Create UserModel instance
+      app_model.User user = app_model.User(
+        userId: userCredential.user?.uid ?? '',
+        email: userCredential.user?.email ?? '',
+        name: _fullNameController.text.trim(),
+        createdAt: DateTime.now(),
       );
 
-      await userCredential.user
-          ?.updateDisplayName(_fullNameController.text.trim());
-      return userCredential;
-    } catch (error) {
-      print("Error signing up: $error");
-      return null;
+      // Save user data to Firestore
+      await _firestoreService.saveUser(user);
+      Navigator.pop(context); // Go back to the login screen
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to sign up. Please try again.')),
+      );
     }
   }
 
@@ -32,7 +54,6 @@ class SignupPage extends StatelessWidget {
     return Scaffold(
       body: Stack(
         children: [
-          // Background image
           Positioned.fill(
             child: Image.asset(
               'assets/images/background.jpg',
@@ -127,46 +148,20 @@ class SignupPage extends StatelessWidget {
                     ),
                     SizedBox(height: 20),
                     ElevatedButton(
-                      onPressed: () async {
-                        if (_passwordController.text.trim() !=
-                            _confirmPasswordController.text.trim()) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text('Passwords do not match.')),
-                          );
-                          return;
-                        }
-                        UserCredential? userCredential =
-                            await _signUpWithEmailAndPassword();
-                        if (userCredential != null) {
-                          Navigator.pop(context);
-                        } else {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                                content: Text(
-                                    'Failed to sign up. Please try again.')),
-                          );
-                        }
-                      },
+                      onPressed: () => _signUpWithEmailAndPassword(context),
                       style: ElevatedButton.styleFrom(
                         padding:
                             EdgeInsets.symmetric(vertical: 8, horizontal: 12),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(5),
                         ),
-                        backgroundColor: Colors.blueAccent,
+                        backgroundColor: Colors.blue,
                         foregroundColor: Colors.white,
                       ),
                       child: Text(
                         'Sign Up',
                         style: TextStyle(fontSize: 16),
                       ),
-                    ),
-                    SizedBox(height: 10),
-                    TextButton(
-                      onPressed: () {
-                        Navigator.pop(context);
-                      },
-                      child: Text('Already have an account? Login'),
                     ),
                   ],
                 ),

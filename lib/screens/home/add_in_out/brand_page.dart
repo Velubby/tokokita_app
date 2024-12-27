@@ -1,54 +1,54 @@
 import 'package:flutter/material.dart';
-import '/models/category_model.dart';
+import '/models/brand_model.dart';
 import '/services/firestore_service.dart';
 
-class CategoryPage extends StatefulWidget {
+class BrandPage extends StatefulWidget {
   final String teamId; // Pass teamId as argument to use in this page
 
-  const CategoryPage({super.key, required this.teamId});
+  const BrandPage({super.key, required this.teamId});
 
   @override
-  State<CategoryPage> createState() => _CategoryPageState();
+  State<BrandPage> createState() => _BrandPageState();
 }
 
-class _CategoryPageState extends State<CategoryPage> {
-  final TextEditingController categoryController = TextEditingController();
+class _BrandPageState extends State<BrandPage> {
+  final TextEditingController brandController = TextEditingController();
   final FirestoreService _firestoreService = FirestoreService();
-  List<Category> categories = [];
+  List<Brand> brands = [];
 
   @override
   void initState() {
     super.initState();
-    _loadCategories();
+    _loadBrands();
   }
 
-  // Fetch categories based on the current teamId
-  Future<void> _loadCategories() async {
-    List<Category> fetchedCategories =
-        await _firestoreService.getCategoriesByTeamId(widget.teamId);
+  // Fetch brands based on the current teamId
+  Future<void> _loadBrands() async {
+    List<Brand> fetchedBrands =
+        await _firestoreService.getBrandsByTeamId(widget.teamId);
     setState(() {
-      categories = fetchedCategories;
+      brands = fetchedBrands;
     });
   }
 
-  // Add a new category to Firestore
-  void addCategory() async {
-    if (categoryController.text.isNotEmpty) {
-      Category newCategory = Category(
-        categoryId:
+  // Add a new brand to Firestore
+  void addBrand() async {
+    if (brandController.text.isNotEmpty) {
+      Brand newBrand = Brand(
+        brandId:
             DateTime.now().toString(), // or use Firestore auto-generated ID
         teamId: widget.teamId,
-        name: categoryController.text.trim(),
+        name: brandController.text.trim(),
       );
 
-      // Add the new category to Firestore
-      await _firestoreService.addCategory(newCategory);
+      // Add the new brand to Firestore
+      await _firestoreService.addBrand(newBrand);
 
-      // Refresh the list of categories
-      _loadCategories();
+      // Refresh the list of brands
+      _loadBrands();
 
       // Clear the input field
-      categoryController.clear();
+      brandController.clear();
     }
   }
 
@@ -56,7 +56,7 @@ class _CategoryPageState extends State<CategoryPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Pilih atau Tambah Kategori'),
+        title: const Text('Pilih atau Tambah Merk'),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -64,29 +64,29 @@ class _CategoryPageState extends State<CategoryPage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             TextField(
-              controller: categoryController,
+              controller: brandController,
               decoration: InputDecoration(
-                labelText: 'Tambah Kategori Baru',
+                labelText: 'Tambah Merk Baru',
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(10),
                 ),
                 suffixIcon: IconButton(
                   icon: const Icon(Icons.add),
-                  onPressed: addCategory,
+                  onPressed: addBrand,
                 ),
               ),
             ),
             const SizedBox(height: 20),
             Expanded(
-              child: categories.isEmpty
+              child: brands.isEmpty
                   ? const Center(child: CircularProgressIndicator())
                   : ListView.builder(
-                      itemCount: categories.length,
+                      itemCount: brands.length,
                       itemBuilder: (context, index) {
                         return ListTile(
-                          title: Text(categories[index].name),
+                          title: Text(brands[index].name),
                           onTap: () {
-                            Navigator.pop(context, categories[index].name);
+                            Navigator.pop(context, brands[index].name);
                           },
                         );
                       },
