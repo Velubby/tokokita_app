@@ -1,26 +1,34 @@
 class Supplier {
-  final String supplierId;
-  final String teamId;
+  final String id;
   final String name;
+  final String email;
+  final String phone;
+  final String teamId;
 
   Supplier({
-    required this.supplierId,
-    required this.teamId,
+    required this.id,
     required this.name,
+    this.email = '',
+    this.phone = '',
+    required this.teamId,
   });
 
   factory Supplier.fromMap(Map<String, dynamic> data, String id) {
     return Supplier(
-      supplierId: id,
-      teamId: data['teamId'],
+      id: id,
       name: data['name'],
+      email: data['email'] ?? '',
+      phone: data['phone'] ?? '',
+      teamId: data['teamId'],
     );
   }
 
   Map<String, dynamic> toMap() {
     return {
-      'teamId': teamId,
       'name': name,
+      'email': email,
+      'phone': phone,
+      'teamId': teamId,
     };
   }
 }

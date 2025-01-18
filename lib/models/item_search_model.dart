@@ -43,4 +43,10 @@ class ItemSearchIndex {
       'teamId': teamId,
     };
   }
+
+  bool matchesSearch(String query) {
+    return itemName.toLowerCase().contains(query.toLowerCase()) ||
+        category.toLowerCase().contains(query.toLowerCase()) ||
+        brand.toLowerCase().contains(query.toLowerCase());
+  }
 }

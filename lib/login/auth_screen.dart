@@ -1,26 +1,86 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '/services/auth_service.dart';
 import 'signup_screen.dart';
-import '/../screens/landing/team_page.dart';
+import '../screens/onboard/onboard.dart';
+import '../screens/onboard/team_page.dart';
 
 class AuthScreen extends StatelessWidget {
-  final AuthService _authService = AuthService();
+  final AuthService _authService;
+
+  AuthScreen({Key? key, AuthService? authService})
+      : _authService = authService ?? AuthService(),
+        super(key: key);
 
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
-  // Sign in with Google
+  Future<void> _checkOnboardingAndNavigate(
+      BuildContext context, String userId) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    bool onboardingCompleted = prefs.getBool('onboardingCompleted') ?? false;
+    print("Onboarding completed: $onboardingCompleted");
+
+    // Check if user has a team
+    bool hasTeam = await _checkUserHasTeam(userId);
+    print("User has a team: $hasTeam");
+
+    // If onboarding is complete, navigate based on team existence
+    if (onboardingCompleted) {
+      if (hasTeam) {
+        // Navigate to TeamPage if the user has a team
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+              builder: (context) => TeamPage(
+                    userId: userId,
+                    teamId: '',
+                  )),
+        );
+      } else {
+        // Navigate to TeamPage to create a team if the user has no team
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+              builder: (context) => TeamPage(
+                    userId: userId,
+                    teamId: '',
+                  )), // Team creation page
+        );
+      }
+    } else {
+      // Navigate to OnboardingScreen if the user has not completed onboarding
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => OnboardingScreen(userId: userId),
+        ),
+      );
+    }
+  }
+
+  // Method to check if the user has a team
+  Future<bool> _checkUserHasTeam(String userId) async {
+    // Assuming there's a Firestore collection that holds teams
+    var teamsCollection = FirebaseFirestore.instance.collection('teams');
+    var userTeams =
+        await teamsCollection.where('userId', isEqualTo: userId).get();
+
+    // Debugging print
+    print("Teams found for user: ${userTeams.docs.length}");
+
+    return userTeams.docs.isNotEmpty; // Check if the user has any teams
+  }
+
   Future<void> _signInWithGoogle(BuildContext context) async {
     try {
       UserCredential? userCredential = await _authService.signInWithGoogle();
       if (userCredential != null) {
         final userId = userCredential.user?.uid;
         if (userId != null) {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => TeamPage(userId: userId)),
-          );
+          await _checkOnboardingAndNavigate(context, userId);
         } else {
           _showError(context, 'Failed to retrieve user ID after signing in.');
         }
@@ -30,8 +90,13 @@ class AuthScreen extends StatelessWidget {
     }
   }
 
-  // Sign in with email and password
   Future<void> _signInWithEmailAndPassword(BuildContext context) async {
+    if (_emailController.text.trim().isEmpty ||
+        _passwordController.text.trim().isEmpty) {
+      _showError(context, 'Please fill in both email and password.');
+      return;
+    }
+
     try {
       UserCredential? userCredential =
           await _authService.signInWithEmailAndPassword(
@@ -41,10 +106,7 @@ class AuthScreen extends StatelessWidget {
       if (userCredential != null) {
         final userId = userCredential.user?.uid;
         if (userId != null) {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => TeamPage(userId: userId)),
-          );
+          await _checkOnboardingAndNavigate(context, userId);
         } else {
           _showError(context, 'Failed to retrieve user ID after signing in.');
         }
@@ -65,7 +127,6 @@ class AuthScreen extends StatelessWidget {
     return Scaffold(
       body: Stack(
         children: [
-          // Background Image
           Container(
             decoration: BoxDecoration(
               image: DecorationImage(
@@ -74,7 +135,6 @@ class AuthScreen extends StatelessWidget {
               ),
             ),
           ),
-          // Login Form
           Center(
             child: SingleChildScrollView(
               child: Container(

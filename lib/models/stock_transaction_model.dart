@@ -3,11 +3,12 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 class StockTransaction {
   final String transactionId;
   final String teamId;
-  final String type;
+  final String type; // "In" or "Out"
   final String itemId;
   final String itemName;
   final int quantity;
-  final String name;
+  final String? supplierName; // Optional for "In" transactions
+  final String? customerName; // Optional for "Out" transactions
   final DateTime createdAt;
 
   StockTransaction({
@@ -17,7 +18,8 @@ class StockTransaction {
     required this.itemId,
     required this.itemName,
     required this.quantity,
-    required this.name,
+    this.supplierName,
+    this.customerName,
     required this.createdAt,
   });
 
@@ -29,7 +31,8 @@ class StockTransaction {
       itemId: data['itemId'],
       itemName: data['itemName'],
       quantity: data['quantity'],
-      name: data['name'],
+      supplierName: data['supplierName'], // Optional field
+      customerName: data['customerName'], // Optional field
       createdAt: (data['createdAt'] as Timestamp).toDate(),
     );
   }
@@ -41,7 +44,8 @@ class StockTransaction {
       'itemId': itemId,
       'itemName': itemName,
       'quantity': quantity,
-      'name': name,
+      'supplierName': supplierName,
+      'customerName': customerName,
       'createdAt': createdAt,
     };
   }

@@ -50,3 +50,7 @@ class Item {
     };
   }
 }
+
+extension ItemStockExtension on Item {
+  bool isLowStock(int threshold) => (stock ?? 0) < threshold;
+}

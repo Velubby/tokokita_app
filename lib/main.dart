@@ -3,7 +3,7 @@ import 'firebase_options.dart'; // Ensure your Firebase options are set up
 import 'package:firebase_core/firebase_core.dart';
 import 'login/auth_screen.dart';
 import '/screens/home_screen.dart';
-import 'package:tokokita_app/screens/landing/team_page.dart';
+import 'package:tokokita_app/screens/onboard/team_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -28,12 +28,13 @@ class MyApp extends StatelessWidget {
       initialRoute: '/',
       routes: {
         '/': (context) => AuthScreen(),
-        '/home': (context) => HomeScreen(
+        '/home': (context) => const HomeScreen(
               userId: '',
               teamId: '',
             ),
         '/team': (context) => TeamPage(
               userId: '',
+              teamId: '',
             ),
       },
     );

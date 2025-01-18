@@ -5,7 +5,7 @@ import 'package:tokokita_app/screens/home_screen.dart';
 class TeamPage extends StatefulWidget {
   final String userId;
 
-  TeamPage({required this.userId});
+  TeamPage({required this.userId, required String teamId});
 
   @override
   _TeamPageState createState() => _TeamPageState();
@@ -13,17 +13,20 @@ class TeamPage extends StatefulWidget {
 
 class _TeamPageState extends State<TeamPage> {
   bool _isDialogVisible = false; // To control whether the dialog is visible
-
-  // Controller for the team name input field
+  bool _isLoading = false; // Track loading state for team creation
   final TextEditingController _teamNameController = TextEditingController();
 
   Future<int> _getItemCount(String teamId) async {
-    final QuerySnapshot itemsSnapshot = await FirebaseFirestore.instance
-        .collection('teams')
-        .doc(teamId)
-        .collection('items')
-        .get();
-    return itemsSnapshot.docs.length;
+    try {
+      final QuerySnapshot itemsSnapshot = await FirebaseFirestore.instance
+          .collection('teams')
+          .doc(teamId)
+          .collection('items')
+          .get();
+      return itemsSnapshot.docs.length;
+    } catch (e) {
+      return 0; // Return 0 if error occurs while fetching item count
+    }
   }
 
   // Show the Create Team dialog and grey out the background
@@ -45,18 +48,28 @@ class _TeamPageState extends State<TeamPage> {
     final teamName = _teamNameController.text.trim();
 
     if (teamName.isNotEmpty) {
-      // Add the team to Firestore
-      await FirebaseFirestore.instance.collection('teams').add({
-        'userId': widget.userId,
-        'teamName': teamName,
-        'createdAt': FieldValue.serverTimestamp(),
+      setState(() {
+        _isLoading = true;
       });
 
-      // Clear the text field after adding the team
-      _teamNameController.clear();
+      try {
+        await FirebaseFirestore.instance.collection('teams').add({
+          'userId': widget.userId,
+          'teamName': teamName,
+          'createdAt': FieldValue.serverTimestamp(),
+        });
 
-      // Close the dialog after saving
-      _closeCreateTeamDialog();
+        _teamNameController.clear();
+        _closeCreateTeamDialog();
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error creating team: $e')),
+        );
+      } finally {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Team name cannot be empty.')),
@@ -97,6 +110,11 @@ class _TeamPageState extends State<TeamPage> {
               if (snapshot.connectionState == ConnectionState.waiting) {
                 return Center(child: CircularProgressIndicator());
               }
+
+              if (snapshot.hasError) {
+                return Center(child: Text('Error: ${snapshot.error}'));
+              }
+
               if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
                 return Center(
                   child: Text(
@@ -118,6 +136,18 @@ class _TeamPageState extends State<TeamPage> {
                   return FutureBuilder<int>(
                     future: _getItemCount(teamId),
                     builder: (context, itemSnapshot) {
+                      if (itemSnapshot.connectionState ==
+                          ConnectionState.waiting) {
+                        return ListTile(
+                          title: Text(teamName),
+                          subtitle: Text("Loading items..."),
+                          trailing: ElevatedButton(
+                            onPressed: () {},
+                            child: Text("Select"),
+                          ),
+                        );
+                      }
+
                       final itemCount = itemSnapshot.data ?? 0;
 
                       return Card(
@@ -205,10 +235,14 @@ class _TeamPageState extends State<TeamPage> {
                         ),
                       ),
                       SizedBox(height: 20),
-                      ElevatedButton(
-                        onPressed: () => _createTeam(context),
-                        child: Text("Create Team"),
-                      ),
+                      _isLoading
+                          ? Center(
+                              child:
+                                  CircularProgressIndicator()) // Show loading
+                          : ElevatedButton(
+                              onPressed: () => _createTeam(context),
+                              child: Text("Create Team"),
+                            ),
                     ],
                   ),
                 ),
