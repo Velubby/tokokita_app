@@ -25,22 +25,21 @@ class AuthScreen extends StatelessWidget {
 
     // Check if user has a team
     bool hasTeam = await _checkUserHasTeam(userId);
-    print("User has a team: $hasTeam");
+    print("User  has a team: $hasTeam");
 
-    // If onboarding is complete, navigate based on team existence
-    if (onboardingCompleted) {
-      if (hasTeam) {
-        // Navigate to TeamPage if the user has a team
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-              builder: (context) => TeamPage(
-                    userId: userId,
-                    teamId: '',
-                  )),
-        );
-      } else {
-        // Navigate to TeamPage to create a team if the user has no team
+    // If user has a team, navigate to TeamPage
+    if (hasTeam) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+            builder: (context) => TeamPage(
+                  userId: userId,
+                  teamId: '',
+                )),
+      );
+    } else {
+      // If onboarding is complete, navigate to TeamPage to create a team
+      if (onboardingCompleted) {
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
@@ -49,15 +48,15 @@ class AuthScreen extends StatelessWidget {
                     teamId: '',
                   )), // Team creation page
         );
+      } else {
+        // Navigate to OnboardingScreen if the user has not completed onboarding
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => OnboardingScreen(userId: userId),
+          ),
+        );
       }
-    } else {
-      // Navigate to OnboardingScreen if the user has not completed onboarding
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (context) => OnboardingScreen(userId: userId),
-        ),
-      );
     }
   }
 

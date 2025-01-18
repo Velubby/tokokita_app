@@ -10,6 +10,7 @@ class InOutPage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text('Transaction History'),
+        automaticallyImplyLeading: false,
       ),
       body: StreamBuilder<QuerySnapshot>(
         stream: firestore

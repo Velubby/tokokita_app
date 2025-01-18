@@ -1,254 +1,307 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:tokokita_app/screens/home_screen.dart';
+import 'package:tokokita_app/services/team_selection_service.dart';
 
 class TeamPage extends StatefulWidget {
   final String userId;
+  final String? teamId;
+  final bool isFromLogin;
 
-  TeamPage({required this.userId, required String teamId});
+  const TeamPage({
+    Key? key,
+    required this.userId,
+    this.teamId,
+    this.isFromLogin = false,
+  }) : super(key: key);
 
   @override
   _TeamPageState createState() => _TeamPageState();
 }
 
 class _TeamPageState extends State<TeamPage> {
-  bool _isDialogVisible = false; // To control whether the dialog is visible
-  bool _isLoading = false; // Track loading state for team creation
   final TextEditingController _teamNameController = TextEditingController();
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  final TeamSelectionService _teamSelectionService = TeamSelectionService();
 
-  Future<int> _getItemCount(String teamId) async {
-    try {
-      final QuerySnapshot itemsSnapshot = await FirebaseFirestore.instance
-          .collection('teams')
-          .doc(teamId)
-          .collection('items')
-          .get();
-      return itemsSnapshot.docs.length;
-    } catch (e) {
-      return 0; // Return 0 if error occurs while fetching item count
-    }
-  }
-
-  // Show the Create Team dialog and grey out the background
-  void _showCreateTeamDialog() {
-    setState(() {
-      _isDialogVisible = true;
-    });
-  }
-
-  // Close the dialog
-  void _closeCreateTeamDialog() {
-    setState(() {
-      _isDialogVisible = false;
-    });
-  }
-
-  // Save the team to Firestore
-  void _createTeam(BuildContext context) async {
-    final teamName = _teamNameController.text.trim();
-
-    if (teamName.isNotEmpty) {
-      setState(() {
-        _isLoading = true;
-      });
-
+  // Create Team Method
+  Future<void> _createTeam() async {
+    if (_formKey.currentState!.validate()) {
       try {
-        await FirebaseFirestore.instance.collection('teams').add({
-          'userId': widget.userId,
-          'teamName': teamName,
+        final user = FirebaseAuth.instance.currentUser;
+        if (user == null) return;
+
+        // Create team document
+        final teamRef =
+            await FirebaseFirestore.instance.collection('teams').add({
+          'userId': user.uid,
+          'teamName': _teamNameController.text.trim(),
           'createdAt': FieldValue.serverTimestamp(),
+          'members': [user.email],
         });
+
+        // Save the newly created team as selected
+        await _teamSelectionService.saveSelectedTeam(
+            teamId: teamRef.id,
+            teamName: _teamNameController.text.trim(),
+            userId: user.uid);
 
         _teamNameController.clear();
-        _closeCreateTeamDialog();
+        Navigator.of(context).pop();
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Team created successfully!'),
+            backgroundColor: Colors.green,
+          ),
+        );
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error creating team: $e')),
+          SnackBar(
+            content: Text('Error creating team: $e'),
+            backgroundColor: Colors.red,
+          ),
         );
-      } finally {
-        setState(() {
-          _isLoading = false;
-        });
       }
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Team name cannot be empty.')),
-      );
     }
+  }
+
+  // Show Create Team Bottom Sheet
+  void _showCreateTeamBottomSheet() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => Padding(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom,
+          left: 20,
+          right: 20,
+          top: 20,
+        ),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                'Create New Team',
+                style: Theme.of(context).textTheme.titleLarge,
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 20),
+              TextFormField(
+                controller: _teamNameController,
+                decoration: InputDecoration(
+                  labelText: 'Team Name',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+                validator: (value) {
+                  if (value == null || value.trim().isEmpty) {
+                    return 'Please enter a team name';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: _createTeam,
+                style: ElevatedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 15),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+                child: const Text('Create Team'),
+              ),
+              const SizedBox(height: 10),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text("Select Team"),
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back),
-          onPressed: () {
-            Navigator.pop(context); // Go back to the previous screen
-          },
-        ),
-        actions: [
-          TextButton(
-            onPressed: _showCreateTeamDialog, // Show the Create Team dialog
-            child: Text(
-              "Create Team",
-              style: TextStyle(color: Colors.white),
+    return PopScope(
+      canPop: !widget.isFromLogin,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+
+        if (widget.isFromLogin) {
+          showDialog(
+            context: context,
+            barrierDismissible: false, // Prevent dismissing
+            builder: (context) => AlertDialog(
+              title: const Text('Select a Team'),
+              content: const Text('You must select a team to proceed.'),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: const Text('OK'),
+                ),
+              ],
             ),
-          ),
-        ],
-      ),
-      body: Stack(
-        children: [
-          // Main content (teams list)
-          StreamBuilder<QuerySnapshot>(
-            stream: FirebaseFirestore.instance
-                .collection('teams')
-                .where('userId', isEqualTo: widget.userId)
-                .snapshots(),
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return Center(child: CircularProgressIndicator());
-              }
+          );
+        }
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('Select Your Team'),
+          centerTitle: true,
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.add),
+              onPressed: _showCreateTeamBottomSheet,
+              tooltip: 'Create Team',
+            ),
+          ],
+        ),
+        body: StreamBuilder<QuerySnapshot>(
+          stream: FirebaseFirestore.instance
+              .collection('teams')
+              .where('userId', isEqualTo: widget.userId)
+              .snapshots(),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            }
 
-              if (snapshot.hasError) {
-                return Center(child: Text('Error: ${snapshot.error}'));
-              }
+            if (snapshot.hasError) {
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.error_outline,
+                        color: Colors.red, size: 60),
+                    const SizedBox(height: 20),
+                    Text(
+                      'Error loading teams',
+                      style: Theme.of(context).textTheme.titleLarge,
+                    ),
+                    Text('${snapshot.error}'),
+                    ElevatedButton(
+                      onPressed: () => setState(() {}),
+                      child: const Text('Retry'),
+                    ),
+                  ],
+                ),
+              );
+            }
 
-              if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-                return Center(
-                  child: Text(
-                    "No teams found. Create a new team!",
-                    style: TextStyle(fontSize: 16),
+            final teams = snapshot.data?.docs ?? [];
+            if (teams.isEmpty) {
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.group_add, size: 100, color: Colors.grey),
+                    const SizedBox(height: 20),
+                    Text(
+                      'No Teams Yet',
+                      style: Theme.of(context).textTheme.titleLarge,
+                    ),
+                    const SizedBox(height: 10),
+                    Text(
+                      'Create your first team to get started',
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
+                    const SizedBox(height: 20),
+                    ElevatedButton.icon(
+                      onPressed: _showCreateTeamBottomSheet,
+                      icon: const Icon(Icons.add),
+                      label: const Text('Create Team'),
+                    ),
+                  ],
+                ),
+              );
+            }
+
+            return ListView.builder(
+              padding: const EdgeInsets.all(16),
+              itemCount: teams.length,
+              itemBuilder: (context, index) {
+                final team = teams[index];
+                final teamId = team.id;
+                final teamName = team['teamName'] ?? 'Unnamed Team';
+
+                return Card(
+                  elevation: 4,
+                  margin: const EdgeInsets.symmetric(vertical: 8),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: ListTile(
+                    contentPadding: const EdgeInsets.all(16),
+                    title: Text(
+                      teamName,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 18,
+                      ),
+                    ),
+                    subtitle: FutureBuilder<QuerySnapshot>(
+                      future: FirebaseFirestore.instance
+                          .collection('teams')
+                          .doc(teamId)
+                          .collection('items')
+                          .get(),
+                      builder: (context, itemSnapshot) {
+                        if (itemSnapshot.connectionState ==
+                            ConnectionState.waiting) {
+                          return const Text('Loading...');
+                        }
+                        final itemCount = itemSnapshot.data?.docs.length ?? 0;
+                        return Text('$itemCount items');
+                      },
+                    ),
+                    trailing: ElevatedButton(
+                      onPressed: () async {
+                        try {
+                          // Save selected team before navigating
+                          await _teamSelectionService.saveSelectedTeam(
+                              teamId: teamId,
+                              teamName: teamName,
+                              userId: widget.userId);
+
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => HomeScreen(
+                                userId: widget.userId,
+                                teamId: teamId,
+                              ),
+                            ),
+                          );
+                        } catch (e) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Error selecting team: $e'),
+                              backgroundColor: Colors.red,
+                            ),
+                          );
+                        }
+                      },
+                      style: ElevatedButton.styleFrom(
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      child: const Text('Select'),
+                    ),
                   ),
                 );
-              }
-
-              final teams = snapshot.data!.docs;
-
-              return ListView.builder(
-                itemCount: teams.length,
-                itemBuilder: (context, index) {
-                  final team = teams[index];
-                  final teamId = team.id;
-                  final teamName = team['teamName'];
-
-                  return FutureBuilder<int>(
-                    future: _getItemCount(teamId),
-                    builder: (context, itemSnapshot) {
-                      if (itemSnapshot.connectionState ==
-                          ConnectionState.waiting) {
-                        return ListTile(
-                          title: Text(teamName),
-                          subtitle: Text("Loading items..."),
-                          trailing: ElevatedButton(
-                            onPressed: () {},
-                            child: Text("Select"),
-                          ),
-                        );
-                      }
-
-                      final itemCount = itemSnapshot.data ?? 0;
-
-                      return Card(
-                        margin:
-                            EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                        child: ListTile(
-                          title: Text(
-                            teamName,
-                            style: TextStyle(
-                                fontSize: 18, fontWeight: FontWeight.bold),
-                          ),
-                          subtitle: Text("$itemCount items"),
-                          trailing: ElevatedButton(
-                            onPressed: () {
-                              // Navigate to the home screen with the selected team
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => HomeScreen(
-                                      userId: widget.userId, teamId: teamId),
-                                ),
-                              );
-                            },
-                            child: Text("Select"),
-                          ),
-                        ),
-                      );
-                    },
-                  );
-                },
-              );
-            },
-          ),
-
-          // If the dialog is visible, show a greyed-out overlay on the background
-          if (_isDialogVisible)
-            GestureDetector(
-              onTap:
-                  _closeCreateTeamDialog, // Close the dialog if tapping outside
-              child: Container(
-                color: Colors.black.withOpacity(0.5), // Grey overlay
-              ),
-            ),
-
-          // Create Team dialog
-          if (_isDialogVisible)
-            Center(
-              child: Dialog(
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                elevation: 10,
-                child: Padding(
-                  padding: const EdgeInsets.all(20.0),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Row to align "Create New Team" and the X button
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            'Create New Team',
-                            style: TextStyle(
-                              fontSize: 22,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          IconButton(
-                            icon: Icon(Icons.close),
-                            onPressed: () {
-                              _teamNameController.clear();
-                              _closeCreateTeamDialog();
-                            },
-                          ),
-                        ],
-                      ),
-                      SizedBox(height: 20),
-                      TextField(
-                        controller: _teamNameController,
-                        decoration: InputDecoration(
-                          labelText: 'Team Name',
-                          border: OutlineInputBorder(),
-                        ),
-                      ),
-                      SizedBox(height: 20),
-                      _isLoading
-                          ? Center(
-                              child:
-                                  CircularProgressIndicator()) // Show loading
-                          : ElevatedButton(
-                              onPressed: () => _createTeam(context),
-                              child: Text("Create Team"),
-                            ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-        ],
+              },
+            );
+          },
+        ),
       ),
     );
   }

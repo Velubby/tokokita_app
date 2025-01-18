@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:tokokita_app/screens/onboard/team_page.dart';
 import 'firebase_options.dart'; // Ensure your Firebase options are set up
 import 'package:firebase_core/firebase_core.dart';
 import 'login/auth_screen.dart';
 import '/screens/home_screen.dart';
-import 'package:tokokita_app/screens/onboard/team_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -32,7 +32,7 @@ class MyApp extends StatelessWidget {
               userId: '',
               teamId: '',
             ),
-        '/team': (context) => TeamPage(
+        '/team': (context) => const TeamPage(
               userId: '',
               teamId: '',
             ),

@@ -1,241 +1,371 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import '/utils/id_generator.dart'; // Ensure correct import for IDGenerator
+import '/utils/id_generator.dart';
 import 'category_page.dart';
 import 'brand_page.dart';
-import '/models/item_model.dart'; // Ensure this points to the correct path for Item class
+import '/models/item_model.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart'; // Firebase Authentication
+import 'package:tokokita_app/services/team_selection_service.dart';
 
 class AddProductPage extends StatefulWidget {
-  const AddProductPage({super.key});
+  const AddProductPage({Key? key}) : super(key: key);
 
   @override
-  State<AddProductPage> createState() => _AddProductPageState();
+  _AddProductPageState createState() => _AddProductPageState();
 }
 
 class _AddProductPageState extends State<AddProductPage> {
-  final TextEditingController kategoriController = TextEditingController();
-  final TextEditingController namaBarangController = TextEditingController();
-  final TextEditingController merkController = TextEditingController();
-  final TextEditingController idBarangController = TextEditingController();
-  final TextEditingController hargaJualController = TextEditingController();
-  final TextEditingController hargaBeliController = TextEditingController();
-  final TextEditingController stockController = TextEditingController();
+  // Controllers
+  final TextEditingController _kategoriController = TextEditingController();
+  final TextEditingController _namaBarangController = TextEditingController();
+  final TextEditingController _merkController = TextEditingController();
+  final TextEditingController _idBarangController = TextEditingController();
+  final TextEditingController _hargaJualController = TextEditingController();
+  final TextEditingController _hargaBeliController = TextEditingController();
+  final TextEditingController _stockController = TextEditingController();
 
-  String? teamId; // Variable to hold the teamId
+  // Services
+  final TeamSelectionService _teamSelectionService = TeamSelectionService();
+
+  // State variables
+  String? _teamId;
+  final _formKey = GlobalKey<FormState>();
 
   @override
   void initState() {
     super.initState();
-    idBarangController.text = IDGenerator.generateID();
-    fetchTeamId(); // Fetch teamId on page load
+    _initializePage();
   }
 
-  // Fetch teamId from current user's Firebase document
-  void fetchTeamId() async {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user != null) {
-      final userDoc = await FirebaseFirestore.instance
-          .collection('users')
-          .doc(user.uid)
-          .get();
-      if (userDoc.exists) {
-        setState(() {
-          teamId = userDoc[
-              'teamId']; // Assuming 'teamId' is stored in the user document
-        });
-      }
-    }
-  }
+  Future<void> _initializePage() async {
+    // Generate initial ID
+    _idBarangController.text = IDGenerator.generateID();
 
-  void regenerateID() {
+    // Fetch team ID
+    final teamDetails = await _teamSelectionService.getSelectedTeam();
     setState(() {
-      idBarangController.text = IDGenerator.generateID();
+      _teamId = teamDetails['teamId'];
     });
   }
 
-  String formatCurrency(String value) {
+  // Currency and ID formatting methods
+  String _formatCurrency(String value) {
     if (value.isEmpty) return '';
     final number = int.tryParse(value.replaceAll(RegExp(r'[^0-9]'), '')) ?? 0;
     return NumberFormat.currency(locale: 'id', symbol: 'Rp', decimalDigits: 0)
         .format(number);
   }
 
-  void saveItem() async {
-    if (teamId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Team ID tidak ditemukan!')),
-      );
-      return;
+  void _regenerateID() {
+    setState(() {
+      _idBarangController.text = IDGenerator.generateID();
+    });
+  }
+
+  // Save item method
+  void _saveItem() async {
+    if (_formKey.currentState!.validate()) {
+      if (_teamId == null) {
+        _showErrorSnackBar('Team ID tidak ditemukan!');
+        return;
+      }
+
+      try {
+        final item = Item(
+          itemId: _idBarangController.text,
+          teamId: _teamId!,
+          itemName: _namaBarangController.text,
+          category: _kategoriController.text,
+          brand: _merkController.text,
+          price: double.tryParse(_hargaJualController.text
+                  .replaceAll(RegExp(r'[^0-9]'), '')) ??
+              0.0,
+          cost: double.tryParse(_hargaBeliController.text
+                  .replaceAll(RegExp(r'[^0-9]'), '')) ??
+              0.0,
+          stock: int.tryParse(_stockController.text) ?? 0,
+          createdAt: DateTime.now(),
+        );
+
+        await FirebaseFirestore.instance.collection('items').add(item.toMap());
+
+        _showSuccessSnackBar('Barang berhasil disimpan!');
+        _clearForm();
+      } catch (e) {
+        _showErrorSnackBar('Gagal menyimpan barang: $e');
+      }
     }
+  }
 
-    final item = Item(
-      itemId: idBarangController.text,
-      teamId: teamId!, // Passing the teamId
-      itemName: namaBarangController.text,
-      category: kategoriController.text, // Category from user input
-      brand: merkController.text, // Brand from user input
-      price: double.tryParse(
-              hargaJualController.text.replaceAll(RegExp(r'[^0-9]'), '')) ??
-          0.0,
-      cost: double.tryParse(
-              hargaBeliController.text.replaceAll(RegExp(r'[^0-9]'), '')) ??
-          0.0,
-      stock: int.tryParse(stockController.text), // Stock from user input
-      createdAt: DateTime.now(), // Use current timestamp as creation date
-    );
+  // Clear form method
+  void _clearForm() {
+    _namaBarangController.clear();
+    _kategoriController.clear();
+    _merkController.clear();
+    _hargaJualController.clear();
+    _hargaBeliController.clear();
+    _stockController.clear();
+    _idBarangController.text = IDGenerator.generateID();
+  }
 
-    await FirebaseFirestore.instance
-        .collection('items') // Save to 'items' collection instead of 'products'
-        .add(item.toMap());
+  // SnackBar methods
+  void _showSuccessSnackBar(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Barang berhasil disimpan!')));
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.green,
+      ),
+    );
+  }
+
+  void _showErrorSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.red,
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text(
+        title: Text(
           "Tambah Barang Baru",
           style: TextStyle(
-              fontSize: 20, color: Colors.black, fontWeight: FontWeight.bold),
+            color: Colors.black87,
+            fontWeight: FontWeight.bold,
+          ),
         ),
-        centerTitle: true,
-        elevation: 0,
         backgroundColor: Colors.white,
+        elevation: 0,
+        centerTitle: true,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          icon: Icon(Icons.arrow_back, color: Colors.black87),
           onPressed: () => Navigator.pop(context),
         ),
       ),
-      body: SingleChildScrollView(
-        child: Padding(
+      body: Form(
+        key: _formKey,
+        child: ListView(
           padding: const EdgeInsets.all(16.0),
-          child: Column(
-            children: [
-              renderIDField("ID Barang", idBarangController),
-              const SizedBox(height: 10),
-              renderInputField("Nama Barang", namaBarangController),
-              const Divider(
-                color: Color.fromARGB(255, 197, 197, 197),
-                thickness: 5,
-                height: 50,
+          children: [
+            // ID Section
+            _buildIDAndNameSection(),
+
+            const SizedBox(height: 20),
+
+            // Attributes Section
+            _buildAttributesSection(),
+
+            const SizedBox(height: 20),
+
+            // Price Section
+            _buildPriceSection(),
+
+            const SizedBox(height: 30),
+
+            // Save Button
+            _buildSaveButton(),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildIDAndNameSection() {
+    return Column(
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: _buildTextFormField(
+                controller: _idBarangController,
+                label: 'ID Barang',
+                readOnly: true,
+                validator: (value) =>
+                    value!.isEmpty ? 'ID tidak boleh kosong' : null,
               ),
-              const Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  "Atribut",
-                  style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black),
-                ),
+            ),
+            IconButton(
+              icon: Icon(Icons.refresh, color: Colors.blue),
+              onPressed: _regenerateID,
+              tooltip: 'Generate New ID',
+            ),
+          ],
+        ),
+        const SizedBox(height: 10),
+        _buildTextFormField(
+          controller: _namaBarangController,
+          label: 'Nama Barang',
+          validator: (value) =>
+              value!.isEmpty ? 'Nama barang harus diisi' : null,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildAttributesSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Atribut',
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.bold,
               ),
-              const SizedBox(height: 10),
-              renderSelectableField("Kategori", kategoriController,
-                  CategoryPage(teamId: teamId ?? 'defaultTeamId')),
-              renderSelectableField("Merk", merkController,
-                  BrandPage(teamId: teamId ?? 'defaultTeamId')),
-              const SizedBox(height: 10),
-              const Divider(
-                color: Color.fromARGB(255, 197, 197, 197),
-                thickness: 5,
-                height: 50,
+        ),
+        const SizedBox(height: 10),
+        _buildSelectableField(
+          controller: _kategoriController,
+          label: 'Kategori',
+          page: CategoryPage(teamId: _teamId ?? 'defaultTeamId'),
+        ),
+        _buildSelectableField(
+          controller: _merkController,
+          label: 'Merk',
+          page: BrandPage(teamId: _teamId ?? 'defaultTeamId'),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPriceSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Harga',
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.bold,
               ),
-              const Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  "Harga",
-                  style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black),
-                ),
-              ),
-              const SizedBox(height: 10),
-              renderInputField("Harga Beli", hargaBeliController,
-                  isNumber: true, formatCurrencyInput: true),
-              renderInputField("Harga Jual", hargaJualController,
-                  isNumber: true, formatCurrencyInput: true),
-              renderInputField("Stok", stockController, isNumber: true),
-              const SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: saveItem,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blueGrey,
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
-                ),
-                child: const Text('Simpan',
-                    style: TextStyle(fontSize: 16, color: Colors.white)),
-              ),
-            ],
+        ),
+        const SizedBox(height: 10),
+        _buildCurrencyField(
+          controller: _hargaBeliController,
+          label: 'Harga Beli',
+        ),
+        _buildCurrencyField(
+          controller: _hargaJualController,
+          label: 'Harga Jual',
+        ),
+        _buildTextFormField(
+          controller: _stockController,
+          label: 'Stok',
+          keyboardType: TextInputType.number,
+          validator: (value) => value!.isEmpty ? 'Stok harus diisi' : null,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSaveButton() {
+    return ElevatedButton(
+      onPressed: _saveItem,
+      style: ElevatedButton.styleFrom(
+        backgroundColor: Colors.blue,
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(10),
+        ),
+      ),
+      child: Text(
+        'Simpan Barang',
+        style: TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTextFormField({
+    required TextEditingController controller,
+    required String label,
+    bool readOnly = false,
+    String? Function(String?)? validator,
+    TextInputType keyboardType = TextInputType.text,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: TextFormField(
+        controller: controller,
+        readOnly: readOnly,
+        validator: validator,
+        keyboardType: keyboardType,
+        decoration: InputDecoration(
+          labelText: label,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(10),
           ),
         ),
       ),
     );
   }
 
-  Widget renderIDField(String label, TextEditingController controller) {
-    return Row(
-      children: [
-        Expanded(
-          child: renderInputField(label, controller, readOnly: true),
-        ),
-        IconButton(
-          icon: const Icon(Icons.refresh_outlined, color: Colors.greenAccent),
-          onPressed: regenerateID,
-        ),
-      ],
-    );
-  }
-
-  Widget renderInputField(String label, TextEditingController controller,
-      {bool isNumber = false,
-      bool formatCurrencyInput = false,
-      bool readOnly = false}) {
+  Widget _buildCurrencyField({
+    required TextEditingController controller,
+    required String label,
+  }) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 15.0),
-      child: TextField(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: TextFormField(
         controller: controller,
-        keyboardType: isNumber ? TextInputType.number : TextInputType.text,
-        readOnly: readOnly,
+        keyboardType: TextInputType.number,
         decoration: InputDecoration(
           labelText: label,
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
         ),
-        onChanged: formatCurrencyInput
-            ? (value) {
-                controller.value = TextEditingValue(
-                  text: formatCurrency(value),
-                  selection: TextSelection.collapsed(
-                      offset: formatCurrency(value).length),
-                );
-              }
-            : null,
+        onChanged: (value) {
+          controller.value = TextEditingValue(
+            text: _formatCurrency(value),
+            selection: TextSelection.collapsed(
+              offset: _formatCurrency(value).length,
+            ),
+          );
+        },
+        validator: (value) => value!.isEmpty ? '$label harus diisi' : null,
       ),
     );
   }
 
-  Widget renderSelectableField(
-      String label, TextEditingController controller, Widget page) {
-    return GestureDetector(
-      onTap: () async {
-        final selectedValue = await Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => page),
-        );
-        if (selectedValue != null) {
-          setState(() {
-            controller.text = selectedValue;
-          });
-        }
-      },
-      child: AbsorbPointer(
-        child: renderInputField(label, controller, readOnly: true),
+  Widget _buildSelectableField({
+    required TextEditingController controller,
+    required String label,
+    required Widget page,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: GestureDetector(
+        onTap: () async {
+          final selectedValue = await Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => page),
+          );
+          if (selectedValue != null) {
+            setState(() {
+              controller.text = selectedValue;
+            });
+          }
+        },
+        child: AbsorbPointer(
+          child: TextFormField(
+            controller: controller,
+            decoration: InputDecoration(
+              labelText: label,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+              suffixIcon: Icon(Icons.search),
+            ),
+            validator: (value) =>
+                value!.isEmpty ? '$label harus dipilih' : null,
+          ),
+        ),
       ),
     );
   }

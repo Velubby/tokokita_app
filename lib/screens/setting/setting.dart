@@ -1,23 +1,47 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:tokokita_app/services/team_selection_service.dart';
+import 'package:tokokita_app/screens/onboard/team_page.dart';
 import 'package:tokokita_app/screens/setting/setting_partner.dart';
 import 'package:tokokita_app/screens/setting/setting_profile.dart';
 import 'package:tokokita_app/screens/setting/setting_team.dart';
 
 class SettingPage extends StatefulWidget {
-  const SettingPage({Key? key}) : super(key: key);
+  const SettingPage({super.key});
 
   @override
   _SettingPageState createState() => _SettingPageState();
 }
 
 class _SettingPageState extends State<SettingPage> {
-  String teamName = '';
-  String notes = '';
-  String teamId = '';
-  List<String> teamIds = [];
-  String selectedTeamId = '';
+  final TeamSelectionService _teamSelectionService = TeamSelectionService();
+  String? _selectedTeamId;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSelectedTeam();
+  }
+
+  Future<void> _loadSelectedTeam() async {
+    final teamDetails = await _teamSelectionService.getSelectedTeam();
+    setState(() {
+      _selectedTeamId = teamDetails['teamId'];
+    });
+  }
+
+  void _navigateToTeamSelection() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => TeamPage(
+          userId: FirebaseAuth.instance.currentUser!.uid,
+          isFromLogin: false,
+        ),
+      ),
+    ).then((_) => _loadSelectedTeam());
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -32,6 +56,7 @@ class _SettingPageState extends State<SettingPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Settings'),
+        automaticallyImplyLeading: false,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -40,20 +65,20 @@ class _SettingPageState extends State<SettingPage> {
               .collection('users')
               .doc(user.uid)
               .snapshots(),
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
+          builder: (context, userSnapshot) {
+            if (userSnapshot.connectionState == ConnectionState.waiting) {
               return const Center(child: CircularProgressIndicator());
             }
 
-            if (snapshot.hasError) {
-              return Center(child: Text('Error: ${snapshot.error}'));
+            if (userSnapshot.hasError) {
+              return Center(child: Text('Error: ${userSnapshot.error}'));
             }
 
-            if (!snapshot.hasData || !snapshot.data!.exists) {
-              return const Center(child: Text('User  data not found'));
+            if (!userSnapshot.hasData || !userSnapshot.data!.exists) {
+              return const Center(child: Text('User data not found'));
             }
 
-            final userData = snapshot.data?.data() as Map<String, dynamic>;
+            final userData = userSnapshot.data?.data() as Map<String, dynamic>;
 
             return StreamBuilder<QuerySnapshot>(
               stream: FirebaseFirestore.instance
@@ -69,26 +94,20 @@ class _SettingPageState extends State<SettingPage> {
                   return Center(child: Text('Error: ${teamsSnapshot.error}'));
                 }
 
-                if (!teamsSnapshot.hasData ||
-                    teamsSnapshot.data!.docs.isEmpty) {
+                final teams = teamsSnapshot.data?.docs ?? [];
+
+                if (teams.isEmpty) {
                   return const Center(child: Text('No team found.'));
-                }
-
-                teamIds =
-                    teamsSnapshot.data!.docs.map((doc) => doc.id).toList();
-
-                if (selectedTeamId.isEmpty) {
-                  selectedTeamId = teamIds.first;
                 }
 
                 return ListView(
                   children: [
                     _buildProfileSection(userData, user, context),
                     const SizedBox(height: 20),
-                    _buildManageTeamSection(selectedTeamId),
+                    _buildManageTeamSection(_selectedTeamId ?? teams.first.id),
                     const SizedBox(height: 20),
-                    _buildPartnerSettingsSection(selectedTeamId),
-                    const SizedBox(height: 20),
+                    _buildPartnerSettingsSection(
+                        _selectedTeamId ?? teams.first.id),
                   ],
                 );
               },
