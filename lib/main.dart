@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:tokokita_app/screens/onboard/team_page.dart';
-import 'firebase_options.dart'; // Ensure your Firebase options are set up
+import 'firebase_options.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'login/auth_screen.dart';
 import '/screens/home_screen.dart';

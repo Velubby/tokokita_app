@@ -25,38 +25,45 @@ class AuthScreen extends StatelessWidget {
 
     // Check if user has a team
     bool hasTeam = await _checkUserHasTeam(userId);
-    print("User  has a team: $hasTeam");
+    print("User has a team: $hasTeam");
 
-    // If user has a team, navigate to TeamPage
-    if (hasTeam) {
+    // For new users or users without a team, always show onboarding
+    if (!hasTeam) {
+      // Reset onboarding status for new users
+      await prefs.setBool('onboardingCompleted', false);
+      onboardingCompleted = false;
+    }
+
+    if (!onboardingCompleted) {
+      // Navigate to OnboardingScreen for new users or users who haven't completed onboarding
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
-            builder: (context) => TeamPage(
-                  userId: userId,
-                  teamId: '',
-                )),
+          builder: (context) => OnboardingScreen(userId: userId),
+        ),
+      );
+    } else if (hasTeam) {
+      // Only navigate to TeamPage if user has completed onboarding AND has a team
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => TeamPage(
+            userId: userId,
+            teamId: '',
+          ),
+        ),
       );
     } else {
-      // If onboarding is complete, navigate to TeamPage to create a team
-      if (onboardingCompleted) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-              builder: (context) => TeamPage(
-                    userId: userId,
-                    teamId: '',
-                  )), // Team creation page
-        );
-      } else {
-        // Navigate to OnboardingScreen if the user has not completed onboarding
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (context) => OnboardingScreen(userId: userId),
+      // If onboarding is complete but no team exists, go to team creation
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => TeamPage(
+            userId: userId,
+            teamId: '',
           ),
-        );
-      }
+        ),
+      );
     }
   }
 

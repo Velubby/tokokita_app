@@ -26,11 +26,14 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   Future<void> _completeOnboarding() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     await prefs.setBool('onboardingCompleted', true);
+
+    // Navigate to TeamPage with isFromLogin set to true
     Navigator.of(context).pushReplacement(MaterialPageRoute(
       builder: (_) => TeamPage(
         userId: widget.userId,
         teamId: '',
-      ), // Pass userId to TeamPage
+        isFromLogin: true, // This will prevent going back
+      ),
     ));
   }
 
