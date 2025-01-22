@@ -1,6 +1,6 @@
 import 'package:tokokita_app/screens/navbar/home.dart';
 import 'package:tokokita_app/screens/navbar/in_and_out.dart';
-import 'package:tokokita_app/screens/navbar/product.dart';
+import 'package:tokokita_app/screens/navbar/item.dart';
 import 'package:tokokita_app/screens/navbar/setting.dart';
 import 'package:flutter/material.dart';
 

@@ -71,6 +71,12 @@ class _AddProductPageState extends State<AddProductPage> {
       }
 
       try {
+        // Handle empty stock value
+        int initialStock = 0;
+        if (_stockController.text.isNotEmpty) {
+          initialStock = int.tryParse(_stockController.text) ?? 0;
+        }
+
         final item = Item(
           itemId: _idBarangController.text,
           teamId: _teamId!,
@@ -83,11 +89,28 @@ class _AddProductPageState extends State<AddProductPage> {
           cost: double.tryParse(_hargaBeliController.text
                   .replaceAll(RegExp(r'[^0-9]'), '')) ??
               0.0,
-          stock: int.tryParse(_stockController.text) ?? 0,
+          stock: initialStock, // Use the initialStock value
           createdAt: DateTime.now(),
         );
 
-        await FirebaseFirestore.instance.collection('items').add(item.toMap());
+        // Add additional stock history if initial stock is provided
+        final docRef = await FirebaseFirestore.instance
+            .collection('items')
+            .add(item.toMap());
+
+        // If initial stock is provided, create a stock history entry
+        if (initialStock > 0) {
+          await FirebaseFirestore.instance.collection('stock_history').add({
+            'itemId': docRef.id,
+            'teamId': _teamId,
+            'type': 'initial', // or 'in'
+            'quantity': initialStock,
+            'previousStock': 0,
+            'newStock': initialStock,
+            'notes': 'Stok awal',
+            'timestamp': FieldValue.serverTimestamp(),
+          });
+        }
 
         _showSuccessSnackBar('Barang berhasil disimpan!');
         _clearForm();
@@ -253,9 +276,8 @@ class _AddProductPageState extends State<AddProductPage> {
         ),
         _buildTextFormField(
           controller: _stockController,
-          label: 'Stok',
+          label: 'Stok Awal (Opsional)',
           keyboardType: TextInputType.number,
-          validator: (value) => value!.isEmpty ? 'Stok harus diisi' : null,
         ),
       ],
     );
