@@ -78,11 +78,10 @@ class _AddProductPageState extends State<AddProductPage> {
         }
 
         // Buat item dengan ID yang sudah di-generate
-        final itemId =
-            _idBarangController.text; // Gunakan ID yang sudah di-generate
+        final itemId = _idBarangController.text;
 
         final item = Item(
-          itemId: itemId, // Gunakan itemId yang sudah di-generate
+          itemId: itemId,
           teamId: _teamId!,
           itemName: _namaBarangController.text,
           category: _kategoriController.text,
@@ -97,25 +96,11 @@ class _AddProductPageState extends State<AddProductPage> {
           createdAt: DateTime.now(),
         );
 
-        // Gunakan ID yang sudah di-generate sebagai document ID
+        // Simpan item
         await FirebaseFirestore.instance
             .collection('items')
-            .doc(itemId) // Gunakan itemId sebagai document ID
-            .set(item.toMap()); // Gunakan set() alih-alih add()
-
-        // Jika ada stok awal, tambahkan ke history
-        if (initialStock > 0) {
-          await FirebaseFirestore.instance.collection('stock_history').add({
-            'itemId': itemId, // Gunakan itemId yang sama
-            'teamId': _teamId,
-            'type': 'initial',
-            'quantity': initialStock,
-            'previousStock': 0,
-            'newStock': initialStock,
-            'notes': 'Stok awal',
-            'timestamp': FieldValue.serverTimestamp(),
-          });
-        }
+            .doc(itemId)
+            .set(item.toMap());
 
         _showSuccessSnackBar('Barang berhasil disimpan!');
         _clearForm();

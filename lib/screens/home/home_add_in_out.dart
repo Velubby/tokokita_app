@@ -1,7 +1,7 @@
 import 'package:tokokita_app/screens/home/home_common/row_render_container.dart';
 import 'package:tokokita_app/screens/home/add_in_out/add_product_page.dart';
-import 'package:tokokita_app/screens/home/add_in_out/in_page.dart';
-import 'package:tokokita_app/screens/home/add_in_out/out_page.dart';
+import 'package:tokokita_app/screens/home/add_in_out/stock_in_page.dart';
+import 'package:tokokita_app/screens/home/add_in_out/stock_out_page.dart';
 import 'package:flutter/material.dart';
 
 class HomeAddInOut extends StatelessWidget {
@@ -32,7 +32,7 @@ class HomeAddInOut extends StatelessWidget {
           onTap: () {
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (context) => const InPage()),
+              MaterialPageRoute(builder: (context) => const StockInPage()),
             );
           },
         ),
@@ -43,7 +43,7 @@ class HomeAddInOut extends StatelessWidget {
           onTap: () {
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (context) => const OutPage()),
+              MaterialPageRoute(builder: (context) => const StockOutPage()),
             );
           },
         ),
