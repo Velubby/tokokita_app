@@ -38,7 +38,6 @@ class _TeamPageState extends State<TeamPage> {
           'userId': user.uid,
           'teamName': _teamNameController.text.trim(),
           'createdAt': FieldValue.serverTimestamp(),
-          'members': [user.email],
         });
 
         // Save the newly created team as selected
@@ -247,29 +246,58 @@ class _TeamPageState extends State<TeamPage> {
                         fontSize: 18,
                       ),
                     ),
-                    subtitle: FutureBuilder<QuerySnapshot>(
-                      future: FirebaseFirestore.instance
-                          .collection('teams')
-                          .doc(teamId)
-                          .collection('items')
-                          .get(),
+                    // Menggunakan StreamBuilder untuk menghitung items dari collection items
+                    subtitle: StreamBuilder<QuerySnapshot>(
+                      stream: FirebaseFirestore.instance
+                          .collection('items') // Collection items terpisah
+                          .where('teamId',
+                              isEqualTo: teamId) // Filter berdasarkan teamId
+                          .snapshots(),
                       builder: (context, itemSnapshot) {
                         if (itemSnapshot.connectionState ==
                             ConnectionState.waiting) {
-                          return const Text('Loading...');
+                          return Row(
+                            children: [
+                              SizedBox(
+                                width: 12,
+                                height: 12,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                      Colors.grey[400]!),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              const Text('Menghitung barang...'),
+                            ],
+                          );
                         }
+
+                        if (itemSnapshot.hasError) {
+                          return Text(
+                            'Error: ${itemSnapshot.error}',
+                            style: TextStyle(color: Colors.red[400]),
+                          );
+                        }
+
                         final itemCount = itemSnapshot.data?.docs.length ?? 0;
-                        return Text('$itemCount items');
+                        return Text(
+                          '$itemCount barang',
+                          style: TextStyle(
+                            color: Colors.grey[600],
+                            fontSize: 14,
+                          ),
+                        );
                       },
                     ),
                     trailing: ElevatedButton(
                       onPressed: () async {
                         try {
-                          // Save selected team before navigating
                           await _teamSelectionService.saveSelectedTeam(
-                              teamId: teamId,
-                              teamName: teamName,
-                              userId: widget.userId);
+                            teamId: teamId,
+                            teamName: teamName,
+                            userId: widget.userId,
+                          );
 
                           Navigator.pushReplacement(
                             context,

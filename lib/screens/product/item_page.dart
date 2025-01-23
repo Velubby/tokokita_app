@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
+import 'package:tokokita_app/models/item_model.dart';
 import 'package:tokokita_app/screens/home/add_in_out/add_product_page.dart';
+import 'package:tokokita_app/screens/product/item_detail_page.dart';
 
 class ItemsPage extends StatefulWidget {
   final String teamId;
@@ -122,9 +124,10 @@ class _ItemsPageState extends State<ItemsPage> {
                   padding: EdgeInsets.all(16),
                   itemCount: sortedDocs.length,
                   itemBuilder: (context, index) {
-                    final data =
-                        sortedDocs[index].data() as Map<String, dynamic>;
-                    return _buildItemCard(data);
+                    final doc = sortedDocs[index];
+                    final data = doc.data() as Map<String, dynamic>;
+                    return _buildItemCard(
+                        data, doc.id); // Teruskan doc.id sebagai documentId
                   },
                 );
               },
@@ -184,41 +187,56 @@ class _ItemsPageState extends State<ItemsPage> {
     );
   }
 
-  Widget _buildItemCard(Map<String, dynamic> data) {
+  Widget _buildItemCard(Map<String, dynamic> data, String documentId) {
+    // Tambahkan parameter documentId
+    final item =
+        Item.fromMap(data, documentId); // Gunakan documentId sebagai itemId
+
     return Card(
       margin: EdgeInsets.only(bottom: 16),
       elevation: 2,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Padding(
-        padding: EdgeInsets.all(16),
-        child: Row(
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    data['itemName'] ?? 'Unnamed Item',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                  ),
-                  SizedBox(height: 4),
-                  Text(
-                    '${data['category'] ?? 'No Category'} • ${data['brand'] ?? 'No Brand'}',
-                    style: TextStyle(color: Colors.grey[600], fontSize: 14),
-                  ),
-                  SizedBox(height: 8),
-                  Row(
-                    children: [
-                      _buildPriceColumn('Harga Beli', data['cost'] ?? 0),
-                      SizedBox(width: 24),
-                      _buildPriceColumn('Harga Jual', data['price'] ?? 0),
-                    ],
-                  ),
-                ],
-              ),
+      child: InkWell(
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => ItemDetailPage(item: item),
             ),
-            _buildStockIndicator(data['stock'] ?? 0),
-          ],
+          );
+        },
+        child: Padding(
+          padding: EdgeInsets.all(16),
+          child: Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      data['itemName'] ?? 'Unnamed Item',
+                      style:
+                          TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    ),
+                    SizedBox(height: 4),
+                    Text(
+                      '${data['category'] ?? 'No Category'} • ${data['brand'] ?? 'No Brand'}',
+                      style: TextStyle(color: Colors.grey[600], fontSize: 14),
+                    ),
+                    SizedBox(height: 8),
+                    Row(
+                      children: [
+                        _buildPriceColumn('Harga Beli', data['cost'] ?? 0),
+                        SizedBox(width: 24),
+                        _buildPriceColumn('Harga Jual', data['price'] ?? 0),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              _buildStockIndicator(data['stock'] ?? 0),
+            ],
+          ),
         ),
       ),
     );

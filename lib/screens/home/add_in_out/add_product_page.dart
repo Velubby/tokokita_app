@@ -77,8 +77,12 @@ class _AddProductPageState extends State<AddProductPage> {
           initialStock = int.tryParse(_stockController.text) ?? 0;
         }
 
+        // Buat item dengan ID yang sudah di-generate
+        final itemId =
+            _idBarangController.text; // Gunakan ID yang sudah di-generate
+
         final item = Item(
-          itemId: _idBarangController.text,
+          itemId: itemId, // Gunakan itemId yang sudah di-generate
           teamId: _teamId!,
           itemName: _namaBarangController.text,
           category: _kategoriController.text,
@@ -89,21 +93,22 @@ class _AddProductPageState extends State<AddProductPage> {
           cost: double.tryParse(_hargaBeliController.text
                   .replaceAll(RegExp(r'[^0-9]'), '')) ??
               0.0,
-          stock: initialStock, // Use the initialStock value
+          stock: initialStock,
           createdAt: DateTime.now(),
         );
 
-        // Add additional stock history if initial stock is provided
-        final docRef = await FirebaseFirestore.instance
+        // Gunakan ID yang sudah di-generate sebagai document ID
+        await FirebaseFirestore.instance
             .collection('items')
-            .add(item.toMap());
+            .doc(itemId) // Gunakan itemId sebagai document ID
+            .set(item.toMap()); // Gunakan set() alih-alih add()
 
-        // If initial stock is provided, create a stock history entry
+        // Jika ada stok awal, tambahkan ke history
         if (initialStock > 0) {
           await FirebaseFirestore.instance.collection('stock_history').add({
-            'itemId': docRef.id,
+            'itemId': itemId, // Gunakan itemId yang sama
             'teamId': _teamId,
-            'type': 'initial', // or 'in'
+            'type': 'initial',
             'quantity': initialStock,
             'previousStock': 0,
             'newStock': initialStock,
