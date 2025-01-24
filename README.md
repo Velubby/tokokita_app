@@ -51,10 +51,6 @@ Toko Kita adalah aplikasi manajemen inventori yang dikembangkan menggunakan Flut
   <img src="assets/screenshots/transaksi.png" width="200" alt="Transaction Screen">
 </p>
 
-<p align="center">
-  <img src="assets/screenshots/team.png" width="200" alt="Team Screen">
-</p>
-
 ## Instalasi
 
 1. Clone repository ini
