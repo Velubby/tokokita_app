@@ -4,7 +4,10 @@ import 'package:google_sign_in/google_sign_in.dart';
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
-  final GoogleSignIn _googleSignIn = GoogleSignIn();
+  final GoogleSignIn _googleSignIn = GoogleSignIn(
+    clientId:
+        '576851441251-qpku3uqqi3no2v9o9h442bjp2pniubbk.apps.googleusercontent.com',
+  );
 
   // Sign up with email and password
   Future<UserCredential?> signUpWithEmailAndPassword(
@@ -70,8 +73,6 @@ class AuthService {
           'createdAt': FieldValue.serverTimestamp(),
         });
         print("User document created in Firestore.");
-      } else {
-        print("User already exists in Firestore.");
       }
     } catch (e) {
       print("Error adding user to Firestore: $e");

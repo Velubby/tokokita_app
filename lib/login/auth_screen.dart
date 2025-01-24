@@ -10,9 +10,8 @@ import '../screens/onboard/team_page.dart';
 class AuthScreen extends StatelessWidget {
   final AuthService _authService;
 
-  AuthScreen({Key? key, AuthService? authService})
-      : _authService = authService ?? AuthService(),
-        super(key: key);
+  AuthScreen({super.key, AuthService? authService})
+      : _authService = authService ?? AuthService();
 
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
@@ -21,21 +20,15 @@ class AuthScreen extends StatelessWidget {
       BuildContext context, String userId) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     bool onboardingCompleted = prefs.getBool('onboardingCompleted') ?? false;
-    print("Onboarding completed: $onboardingCompleted");
 
-    // Check if user has a team
     bool hasTeam = await _checkUserHasTeam(userId);
-    print("User has a team: $hasTeam");
 
-    // For new users or users without a team, always show onboarding
     if (!hasTeam) {
-      // Reset onboarding status for new users
       await prefs.setBool('onboardingCompleted', false);
       onboardingCompleted = false;
     }
 
     if (!onboardingCompleted) {
-      // Navigate to OnboardingScreen for new users or users who haven't completed onboarding
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
@@ -43,7 +36,6 @@ class AuthScreen extends StatelessWidget {
         ),
       );
     } else if (hasTeam) {
-      // Only navigate to TeamPage if user has completed onboarding AND has a team
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
@@ -54,7 +46,6 @@ class AuthScreen extends StatelessWidget {
         ),
       );
     } else {
-      // If onboarding is complete but no team exists, go to team creation
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
@@ -67,17 +58,12 @@ class AuthScreen extends StatelessWidget {
     }
   }
 
-  // Method to check if the user has a team
   Future<bool> _checkUserHasTeam(String userId) async {
-    // Assuming there's a Firestore collection that holds teams
     var teamsCollection = FirebaseFirestore.instance.collection('teams');
     var userTeams =
         await teamsCollection.where('userId', isEqualTo: userId).get();
 
-    // Debugging print
-    print("Teams found for user: ${userTeams.docs.length}");
-
-    return userTeams.docs.isNotEmpty; // Check if the user has any teams
+    return userTeams.docs.isNotEmpty;
   }
 
   Future<void> _signInWithGoogle(BuildContext context) async {
@@ -92,7 +78,7 @@ class AuthScreen extends StatelessWidget {
         }
       }
     } catch (e) {
-      _showError(context, 'Failed to sign in with Google. Please try again.');
+      _showError(context, 'Google Sign-In failed: ${e.toString()}');
     }
   }
 
@@ -118,7 +104,7 @@ class AuthScreen extends StatelessWidget {
         }
       }
     } catch (e) {
-      _showError(context, 'Failed to sign in. Please check your credentials.');
+      _showError(context, 'Sign-in failed: ${e.toString()}');
     }
   }
 

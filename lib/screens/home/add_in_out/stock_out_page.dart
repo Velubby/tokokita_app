@@ -245,6 +245,7 @@ class _StockOutPageState extends State<StockOutPage> {
         backgroundColor: Colors.white,
         elevation: 0,
         centerTitle: true,
+        iconTheme: const IconThemeData(color: Colors.black87),
       ),
       body: Form(
         key: _formKey,
