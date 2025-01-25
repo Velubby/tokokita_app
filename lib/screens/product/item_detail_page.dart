@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:intl/intl.dart';
+import 'package:tokokita_app/screens/home/add_in_out/stock_in_page.dart';
+import 'package:tokokita_app/screens/home/add_in_out/stock_out_page.dart';
 import 'package:tokokita_app/screens/product/edit_item_page.dart';
 import '/models/item_model.dart';
 
@@ -139,6 +142,54 @@ class _ItemDetailPageState extends State<ItemDetailPage> {
           ),
         ],
       ),
+    );
+  }
+
+  void _showBottomSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (context) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: SvgPicture.asset(
+                  'assets/icons/in.svg',
+                  width: 24,
+                  height: 24,
+                ),
+                title: const Text('Stock Masuk'),
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => StockInPage()),
+                  );
+                },
+              ),
+              ListTile(
+                leading: SvgPicture.asset(
+                  'assets/icons/out.svg',
+                  width: 24,
+                  height: 24,
+                ),
+                title: const Text('Stock Keluar'),
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => StockOutPage()),
+                  );
+                },
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 
@@ -308,7 +359,7 @@ class _ItemDetailPageState extends State<ItemDetailPage> {
                       ),
                       ElevatedButton.icon(
                         onPressed: () {
-                          // Navigate to stock adjustment page
+                          _showBottomSheet(context);
                         },
                         icon: const Icon(Icons.swap_vert),
                         label: const Text('Stok Keluar/Masuk'),
