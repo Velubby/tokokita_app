@@ -14,15 +14,7 @@
       },
       "oauth_client": [
         {
-          "client_id": "576851441251-9nnaus6npgu3lmng0aehjv3q34kjt3i0.apps.googleusercontent.com",
-          "client_type": 1,
-          "android_info": {
-            "package_name": "com.example.tokokita_app",
-            "certificate_hash": "3aa93f65d4f00fe731458529b169df559f78baad"
-          }
-        },
-        {
-          "client_id": "576851441251-l7m5hp8u98sg39c1ipqq45c3ht8pitiq.apps.googleusercontent.com",
+          "client_id": "576851441251-4io1jodeekes85ehsfp5lenl2m08ghfm.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
             "package_name": "com.example.tokokita_app",
@@ -45,13 +37,6 @@
             {
               "client_id": "576851441251-qpku3uqqi3no2v9o9h442bjp2pniubbk.apps.googleusercontent.com",
               "client_type": 3
-            },
-            {
-              "client_id": "576851441251-v1bji24me0j3693n0ou1jciu52f0epfa.apps.googleusercontent.com",
-              "client_type": 2,
-              "ios_info": {
-                "bundle_id": "com.example.tokokitaApp"
-              }
             }
           ]
         }
