@@ -41,3 +41,13 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Kotlin compiler sessions (temp files)
+android/.kotlin/
+
+# Temp icon render files
+assets/icons/temp_*.html
+assets/icons/temp_*.png
+assets/icons/splash_logo_blue.png
+assets/icons/splash_logo_white.png
+assets/icons/app_icon_foreground.png
